@@ -1,0 +1,42 @@
+{
+  "app": {
+    "name": "Hệ thống đặt phòng Kyanon"
+  },
+  "nav": {
+    "dashboard": "Tổng quan",
+    "rooms": "Phòng",
+    "bookings": "Đặt phòng",
+    "logout": "Đăng xuất"
+  },
+  "actions": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "create": "Tạo mới",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "view": "Xem",
+    "back": "Quay lại",
+    "confirm": "Xác nhận"
+  },
+  "status": {
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "empty": "Không có dữ liệu",
+    "success": "Thành công"
+  },
+  "pagination": {
+    "previous": "Trước",
+    "next": "Tiếp",
+    "showing": "Hiển thị {{from}}-{{to}} trong tổng số {{total}} kết quả"
+  },
+  "errors": {
+    "required": "Trường này là bắt buộc",
+    "invalid_email": "Địa chỉ email không hợp lệ",
+    "min_length": "Phải có ít nhất {{min}} ký tự",
+    "max_length": "Phải có tối đa {{max}} ký tự",
+    "network": "Lỗi kết nối. Vui lòng thử lại.",
+    "server": "Lỗi máy chủ. Vui lòng liên hệ hỗ trợ."
+  }
+}

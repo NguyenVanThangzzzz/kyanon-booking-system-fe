@@ -1,0 +1,3225 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kyanon Booking System — Kiến trúc & Công nghệ</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ── Reset & Base ── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        background: #1a1a2e;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+        padding: 40px 20px;
+        color: #1c1917;
+      }
+
+      /* ── Slide container: 16:9 = 1280×720 ── */
+      .slide {
+        width: 1280px;
+        height: 720px;
+        background: #fff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+        flex-shrink: 0;
+      }
+
+      /* ── Slide number badge ── */
+      .slide-num {
+        position: absolute;
+        bottom: 22px;
+        right: 36px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #a8a29e;
+        letter-spacing: 0.5px;
+      }
+
+      /* ── Print helper ── */
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+          gap: 0;
+        }
+        .slide {
+          page-break-after: always;
+          box-shadow: none;
+          width: 100vw;
+          height: 100vh;
+        }
+        .slide-num {
+          display: none;
+        }
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 1 — COVER
+  ═══════════════════════════════════════════ */
+      .s1 {
+        background: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #06b6d4 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 0;
+      }
+      .s1-badge {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        padding: 8px 24px;
+        border-radius: 100px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        margin-bottom: 28px;
+      }
+      .s1-title {
+        font-size: 62px;
+        font-weight: 900;
+        color: #fff;
+        line-height: 1.1;
+        letter-spacing: -2px;
+      }
+      .s1-title span {
+        color: #ccfbf1;
+      }
+      .s1-subtitle {
+        margin-top: 20px;
+        font-size: 22px;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .s1-meta {
+        margin-top: 48px;
+        display: flex;
+        gap: 40px;
+      }
+      .s1-meta-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+      .s1-meta-item .val {
+        font-size: 28px;
+        font-weight: 800;
+        color: #fff;
+      }
+      .s1-meta-item .lbl {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+      }
+      .s1-divider {
+        width: 1px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.3);
+        align-self: center;
+      }
+      .s1-deco {
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .s1-deco-1 {
+        top: -150px;
+        right: -150px;
+      }
+      .s1-deco-2 {
+        bottom: -200px;
+        left: -200px;
+        width: 600px;
+        height: 600px;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 2 — OVERVIEW
+  ═══════════════════════════════════════════ */
+      .s2 {
+        display: grid;
+        grid-template-rows: 110px 1fr;
+      }
+      .slide-header {
+        background: linear-gradient(90deg, #0f766e, #14b8a6);
+        display: flex;
+        align-items: center;
+        padding: 0 60px;
+        gap: 20px;
+      }
+      .slide-header-icon {
+        width: 52px;
+        height: 52px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+      }
+      .slide-header h2 {
+        font-size: 32px;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.5px;
+      }
+      .slide-header p {
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.75);
+        margin-top: 2px;
+      }
+      .slide-body {
+        padding: 40px 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .overview-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 10px;
+      }
+      .overview-card {
+        background: #fafaf9;
+        border: 1px solid #e7e5e4;
+        border-radius: 16px;
+        padding: 28px 32px;
+        position: relative;
+      }
+      .overview-card h3 {
+        font-size: 17px;
+        font-weight: 700;
+        color: #1c1917;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .overview-card h3 .tag {
+        font-size: 11px;
+        font-weight: 600;
+        background: #ccfbf1;
+        color: #0f766e;
+        padding: 3px 10px;
+        border-radius: 100px;
+      }
+      .kv-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #e7e5e4;
+        font-size: 14px;
+      }
+      .kv-row:last-child {
+        border-bottom: none;
+      }
+      .kv-row .k {
+        color: #78716c;
+        font-weight: 500;
+      }
+      .kv-row .v {
+        color: #1c1917;
+        font-weight: 600;
+      }
+      .v-teal {
+        color: #0d9488 !important;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 3 — BE TECH STACK
+  ═══════════════════════════════════════════ */
+      .tech-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .tech-card {
+        background: #fafaf9;
+        border: 1px solid #e7e5e4;
+        border-radius: 14px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .tech-card .icon {
+        font-size: 28px;
+      }
+      .tech-card .name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1c1917;
+      }
+      .tech-card .role {
+        font-size: 12px;
+        color: #78716c;
+        line-height: 1.4;
+      }
+      .tech-card .badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 100px;
+        margin-top: 2px;
+      }
+      .badge-teal {
+        background: #ccfbf1;
+        color: #0f766e;
+      }
+      .badge-blue {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+      .badge-purple {
+        background: #ede9fe;
+        color: #7c3aed;
+      }
+      .badge-orange {
+        background: #ffedd5;
+        color: #c2410c;
+      }
+      .badge-gray {
+        background: #f5f5f4;
+        color: #44403c;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 4 — CLEAN ARCHITECTURE
+  ═══════════════════════════════════════════ */
+      .arch-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: center;
+      }
+      .arch-layers {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .arch-layer {
+        padding: 18px 24px;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        position: relative;
+      }
+      .arch-layer:first-child {
+        border-radius: 14px 14px 0 0;
+      }
+      .arch-layer:last-child {
+        border-radius: 0 0 14px 14px;
+      }
+      .arch-layer .ln {
+        font-size: 15px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .arch-layer .ld {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .arch-layer .lt {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.65);
+        font-style: italic;
+        margin-top: 2px;
+      }
+      .al-1 {
+        background: #0f766e;
+      }
+      .al-2 {
+        background: #14b8a6;
+      }
+      .al-3 {
+        background: #2dd4bf;
+      }
+      .al-4 {
+        background: #5eead4;
+      }
+
+      .arch-arrow {
+        text-align: center;
+        font-size: 22px;
+        color: #e7e5e4;
+        padding: 2px 0;
+      }
+
+      .arch-right {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .arch-principle {
+        background: #fafaf9;
+        border-left: 4px solid #14b8a6;
+        border-radius: 0 12px 12px 0;
+        padding: 16px 20px;
+      }
+      .arch-principle h4 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1c1917;
+      }
+      .arch-principle p {
+        font-size: 13px;
+        color: #78716c;
+        margin-top: 4px;
+        line-height: 1.5;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 5 — MODULE STRUCTURE
+  ═══════════════════════════════════════════ */
+      .module-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .module-box {
+        background: #fafaf9;
+        border: 1px solid #e7e5e4;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .module-box-head {
+        background: #f5f5f4;
+        padding: 12px 20px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #44403c;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #e7e5e4;
+      }
+      .module-list {
+        padding: 12px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .module-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: #44403c;
+      }
+      .module-item .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #14b8a6;
+        flex-shrink: 0;
+      }
+      .module-item .mn {
+        font-weight: 600;
+        font-family: monospace;
+        font-size: 13px;
+        color: #0f766e;
+      }
+      .module-item .md {
+        color: #78716c;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 6 — DATABASE SCHEMA
+  ═══════════════════════════════════════════ */
+      .db-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .db-table {
+        background: #fafaf9;
+        border: 1px solid #e7e5e4;
+        border-radius: 12px;
+        overflow: hidden;
+        font-size: 12px;
+      }
+      .db-table-head {
+        background: #0f766e;
+        color: #fff;
+        font-weight: 700;
+        padding: 10px 14px;
+        font-size: 13px;
+        letter-spacing: 0.3px;
+      }
+      .db-table-head.light {
+        background: #14b8a6;
+      }
+      .db-table-head.gray {
+        background: #44403c;
+      }
+      .db-field {
+        padding: 6px 14px;
+        border-bottom: 1px solid #f0efee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .db-field:last-child {
+        border-bottom: none;
+      }
+      .db-field .fn {
+        color: #44403c;
+        font-weight: 500;
+      }
+      .db-field .ft {
+        color: #a8a29e;
+        font-size: 11px;
+      }
+      .db-field .pk {
+        color: #0f766e;
+        font-size: 10px;
+        font-weight: 700;
+        background: #ccfbf1;
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+
+      .db-relations {
+        margin-top: 16px;
+        background: #fafaf9;
+        border: 1px solid #e7e5e4;
+        border-radius: 12px;
+        padding: 16px 20px;
+      }
+      .db-relations h4 {
+        font-size: 13px;
+        font-weight: 700;
+        color: #44403c;
+        margin-bottom: 10px;
+      }
+      .rel-line {
+        font-size: 12.5px;
+        color: #44403c;
+        font-family: monospace;
+        padding: 3px 0;
+      }
+      .rel-line span {
+        color: #0f766e;
+        font-weight: 600;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 7 — AUTH FLOW
+  ═══════════════════════════════════════════ */
+      .flow-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        align-items: start;
+      }
+      .flow-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .flow-step {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .flow-step-left {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .flow-dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #14b8a6;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .flow-line {
+        width: 2px;
+        flex: 1;
+        background: #e7e5e4;
+        min-height: 28px;
+        margin: 4px 0;
+      }
+      .flow-content {
+        padding-bottom: 24px;
+        flex: 1;
+      }
+      .flow-content h4 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1c1917;
+      }
+      .flow-content p {
+        font-size: 12.5px;
+        color: #78716c;
+        margin-top: 4px;
+        line-height: 1.5;
+      }
+
+      .role-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .role-table th {
+        background: #f5f5f4;
+        padding: 10px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #44403c;
+        border-bottom: 1px solid #e7e5e4;
+      }
+      .role-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid #f0efee;
+        color: #44403c;
+      }
+      .check {
+        color: #16a34a;
+        font-size: 16px;
+      }
+      .cross {
+        color: #dc2626;
+        font-size: 16px;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 8 — PAYMENT FLOW
+  ═══════════════════════════════════════════ */
+      .payment-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 4px;
+      }
+      .payment-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .payment-box {
+        flex: 1;
+        background: #fafaf9;
+        border: 1px solid #e7e5e4;
+        border-radius: 12px;
+        padding: 16px 20px;
+      }
+      .payment-box.teal-box {
+        background: #ccfbf1;
+        border-color: #5eead4;
+      }
+      .payment-box h4 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1c1917;
+      }
+      .payment-box p {
+        font-size: 12px;
+        color: #78716c;
+        margin-top: 4px;
+      }
+      .payment-arrow {
+        font-size: 22px;
+        color: #14b8a6;
+        flex-shrink: 0;
+      }
+      .payment-arrow-down {
+        font-size: 22px;
+        color: #14b8a6;
+        text-align: center;
+      }
+
+      .payment-side {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 9 — FE TECH STACK
+  ═══════════════════════════════════════════ */
+
+      /* ═══════════════════════════════════════════
+     SLIDE 10 — FE ARCHITECTURE
+  ═══════════════════════════════════════════ */
+      .fe-arch {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+      .folder-tree {
+        background: #1c1917;
+        border-radius: 14px;
+        padding: 24px 28px;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.8;
+        color: #d6d3d1;
+      }
+      .folder-tree .dir {
+        color: #5eead4;
+        font-weight: 600;
+      }
+      .folder-tree .file {
+        color: #a8a29e;
+      }
+      .folder-tree .comment {
+        color: #57534e;
+      }
+
+      .fe-layers {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        justify-content: center;
+      }
+      .fe-layer-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .fe-layer-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #ccfbf1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      .fe-layer-text h4 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1c1917;
+      }
+      .fe-layer-text p {
+        font-size: 12px;
+        color: #78716c;
+        margin-top: 2px;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 11 — ROUTING
+  ═══════════════════════════════════════════ */
+      .routing-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .route-group {
+        background: #fafaf9;
+        border: 1px solid #e7e5e4;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .route-group-head {
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid #e7e5e4;
+      }
+      .route-group-head .icon {
+        font-size: 20px;
+      }
+      .route-group-head .title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1c1917;
+      }
+      .route-group-head .guard {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 100px;
+      }
+      .guard-none {
+        background: #f5f5f4;
+        color: #78716c;
+      }
+      .guard-auth {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+      .guard-role {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .route-list {
+        padding: 12px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .route-item {
+        font-size: 12.5px;
+        font-family: monospace;
+        color: #44403c;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .route-item .rpath {
+        color: #0f766e;
+        font-weight: 600;
+      }
+      .route-item .rdesc {
+        color: #78716c;
+        font-size: 11.5px;
+      }
+
+      .code-split-box {
+        background: #1c1917;
+        border-radius: 14px;
+        padding: 20px 24px;
+        font-family: monospace;
+        font-size: 12px;
+        line-height: 1.7;
+        color: #d6d3d1;
+      }
+      .cs-comment {
+        color: #57534e;
+      }
+      .cs-kw {
+        color: #5eead4;
+      }
+      .cs-fn {
+        color: #fbbf24;
+      }
+      .cs-str {
+        color: #86efac;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 12 — DATA FLOW
+  ═══════════════════════════════════════════ */
+      .dataflow {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        height: 100%;
+      }
+      .df-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        align-items: center;
+      }
+      .df-node {
+        width: 160px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .df-node.n-teal {
+        background: #ccfbf1;
+        color: #0f766e;
+        border: 1px solid #5eead4;
+      }
+      .df-node.n-blue {
+        background: #dbeafe;
+        color: #1d4ed8;
+        border: 1px solid #93c5fd;
+      }
+      .df-node.n-purple {
+        background: #ede9fe;
+        color: #7c3aed;
+        border: 1px solid #c4b5fd;
+      }
+      .df-node.n-orange {
+        background: #ffedd5;
+        color: #c2410c;
+        border: 1px solid #fdba74;
+      }
+      .df-node.n-gray {
+        background: #f5f5f4;
+        color: #44403c;
+        border: 1px solid #e7e5e4;
+      }
+      .df-arrow {
+        font-size: 18px;
+        color: #d6d3d1;
+        padding: 4px 0;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 13 — HIGHLIGHTS
+  ═══════════════════════════════════════════ */
+      .highlight-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      .hl-card {
+        background: #fafaf9;
+        border: 1px solid #e7e5e4;
+        border-radius: 16px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .hl-card .hl-icon {
+        font-size: 32px;
+      }
+      .hl-card h4 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1c1917;
+      }
+      .hl-card p {
+        font-size: 12.5px;
+        color: #78716c;
+        line-height: 1.55;
+      }
+
+      /* ═══════════════════════════════════════════
+     SLIDE 14 — CLOSING
+  ═══════════════════════════════════════════ */
+      .s14 {
+        background: linear-gradient(135deg, #1c1917 0%, #0f766e 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 24px;
+      }
+      .s14-label {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: #5eead4;
+      }
+      .s14-title {
+        font-size: 52px;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: -1.5px;
+        line-height: 1.1;
+      }
+      .s14-sub {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .s14-stack {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 12px;
+      }
+      .s14-chip {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 13px;
+        font-weight: 500;
+        padding: 8px 20px;
+        border-radius: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ════════════════════════════════════════════════
+     SLIDE 1 — COVER
+════════════════════════════════════════════════ -->
+    <div class="slide s1">
+      <div class="s1-deco s1-deco-1"></div>
+      <div class="s1-deco s1-deco-2"></div>
+      <div class="s1-badge">K-Fresh Trainee · Final Project</div>
+      <div class="s1-title">Kyanon<br /><span>Booking System</span></div>
+      <div class="s1-subtitle">Kiến trúc &amp; Công nghệ</div>
+      <div class="s1-meta">
+        <div class="s1-meta-item">
+          <span class="val">2</span>
+          <span class="lbl">Repo</span>
+        </div>
+        <div class="s1-divider"></div>
+        <div class="s1-meta-item">
+          <span class="val">10</span>
+          <span class="lbl">BE Modules</span>
+        </div>
+        <div class="s1-divider"></div>
+        <div class="s1-meta-item">
+          <span class="val">11</span>
+          <span class="lbl">FE Features</span>
+        </div>
+        <div class="s1-divider"></div>
+        <div class="s1-meta-item">
+          <span class="val">TypeScript</span>
+          <span class="lbl">Full-stack</span>
+        </div>
+      </div>
+      <div class="slide-num" style="color: rgba(255, 255, 255, 0.4)">1 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 2 — TỔNG QUAN
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">🏨</div>
+        <div>
+          <h2>Tổng quan dự án</h2>
+          <p>Hệ thống đặt phòng khách sạn full-stack với kiến trúc chuẩn Enterprise</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div class="overview-grid">
+          <div class="overview-card">
+            <h3>⚙️ Backend <span class="tag">REST API</span></h3>
+            <div class="kv-row">
+              <span class="k">Repo</span><span class="v">kyanon-booking-system</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Runtime</span><span class="v v-teal">Node.js ≥ 18</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Framework</span><span class="v">Express 4</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Ngôn ngữ</span><span class="v">TypeScript 5.9 (ESM)</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Kiến trúc</span><span class="v v-teal">Clean Architecture</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Modules</span><span class="v">10 business domains</span>
+            </div>
+          </div>
+          <div class="overview-card">
+            <h3>🖥️ Frontend <span class="tag">SPA</span></h3>
+            <div class="kv-row">
+              <span class="k">Repo</span><span class="v">kyanon-booking-system-fe</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Framework</span><span class="v v-teal">React 18</span>
+            </div>
+            <div class="kv-row"><span class="k">Build tool</span><span class="v">Vite 6</span></div>
+            <div class="kv-row">
+              <span class="k">Ngôn ngữ</span><span class="v">TypeScript 5.7 (ESM)</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Kiến trúc</span><span class="v v-teal">Feature-Sliced</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Features</span><span class="v">11 feature modules</span>
+            </div>
+          </div>
+          <div class="overview-card">
+            <h3>🗄️ Infrastructure</h3>
+            <div class="kv-row">
+              <span class="k">Database</span><span class="v">PostgreSQL 16</span>
+            </div>
+            <div class="kv-row"><span class="k">Cache</span><span class="v">Redis 7</span></div>
+            <div class="kv-row"><span class="k">ORM</span><span class="v">Prisma 5</span></div>
+            <div class="kv-row">
+              <span class="k">Container</span><span class="v">Docker + Docker Compose</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Payment</span><span class="v v-teal">PayOS (QR Code)</span>
+            </div>
+          </div>
+          <div class="overview-card">
+            <h3>🛡️ Chất lượng Code</h3>
+            <div class="kv-row">
+              <span class="k">Type system</span><span class="v">TypeScript Strict Mode</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Linting</span><span class="v">ESLint + Prettier</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Pre-commit</span><span class="v">Husky + lint-staged</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Commit</span><span class="v">Conventional Commits</span>
+            </div>
+            <div class="kv-row">
+              <span class="k">Testing</span><span class="v">Vitest + Testing Library</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">2 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 3 — BACKEND TECH STACK
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">⚙️</div>
+        <div>
+          <h2>Backend — Technology Stack</h2>
+          <p>Node.js · Express · TypeScript · PostgreSQL · Redis</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div class="tech-grid">
+          <div class="tech-card">
+            <span class="icon">🚀</span>
+            <span class="name">Express 4</span>
+            <span class="role">HTTP Server Framework</span>
+            <span class="badge badge-teal">Core</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🗃️</span>
+            <span class="name">Prisma 5</span>
+            <span class="role">ORM – type-safe database access</span>
+            <span class="badge badge-blue">Database</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🐘</span>
+            <span class="name">PostgreSQL 16</span>
+            <span class="role">Relational database chính</span>
+            <span class="badge badge-blue">Database</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">⚡</span>
+            <span class="name">Redis 7</span>
+            <span class="role">Cache, token blacklist, session</span>
+            <span class="badge badge-orange">Cache</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🔐</span>
+            <span class="name">JWT + bcryptjs</span>
+            <span class="role">Access token + Refresh token + password hash</span>
+            <span class="badge badge-purple">Auth</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">✅</span>
+            <span class="name">Zod</span>
+            <span class="role">Runtime schema validation tại Presentation layer</span>
+            <span class="badge badge-teal">Validation</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">💳</span>
+            <span class="name">PayOS</span>
+            <span class="role">Thanh toán QR online + Webhook</span>
+            <span class="badge badge-orange">Payment</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">📋</span>
+            <span class="name">Pino</span>
+            <span class="role">Structured logging hiệu suất cao</span>
+            <span class="badge badge-gray">Logging</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">📖</span>
+            <span class="name">Swagger UI</span>
+            <span class="role">API documentation tự động</span>
+            <span class="badge badge-gray">Docs</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🛡️</span>
+            <span class="name">Helmet + CORS</span>
+            <span class="role">HTTP security headers</span>
+            <span class="badge badge-purple">Security</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">⏰</span>
+            <span class="name">node-cron</span>
+            <span class="role">Cron jobs – tự động cập nhật trạng thái booking</span>
+            <span class="badge badge-gray">Scheduler</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🧪</span>
+            <span class="name">Vitest + supertest</span>
+            <span class="role">Unit test + Integration test</span>
+            <span class="badge badge-gray">Testing</span>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">3 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 4 — CLEAN ARCHITECTURE
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">🏗️</div>
+        <div>
+          <h2>Backend — Clean Architecture</h2>
+          <p>4 tầng độc lập · Dependency Rule · SOLID Principles · Constructor DI</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div class="arch-wrapper">
+          <div>
+            <div class="arch-layers">
+              <div class="arch-layer al-1">
+                <span class="ln">1. Domain Layer (Innermost)</span>
+                <span class="ld">Entities · Repository Interfaces · Domain Logic</span>
+                <span class="lt">Không phụ thuộc bất kỳ framework nào — pure TypeScript</span>
+              </div>
+              <div class="arch-arrow">↑</div>
+              <div class="arch-layer al-2">
+                <span class="ln">2. Application Layer</span>
+                <span class="ld">Services · Use Cases · DTOs</span>
+                <span class="lt">Orchestrate domain entities, gọi repositories</span>
+              </div>
+              <div class="arch-arrow">↑</div>
+              <div class="arch-layer al-3">
+                <span class="ln">3. Infrastructure Layer</span>
+                <span class="ld">Prisma Repos · Redis · Logger · JWT Service</span>
+                <span class="lt">Implements domain interfaces với framework cụ thể</span>
+              </div>
+              <div class="arch-arrow">↑</div>
+              <div class="arch-layer al-4">
+                <span class="ln" style="color: #0f766e">4. Presentation Layer (Outermost)</span>
+                <span class="ld" style="color: #0d9488"
+                  >Controllers · Routes · Zod Validators · Middleware</span
+                >
+                <span class="lt" style="color: #14b8a6"
+                  >Xử lý HTTP, validate input, format response</span
+                >
+              </div>
+            </div>
+            <p style="font-size: 12px; color: #a8a29e; margin-top: 12px; text-align: center">
+              ↑ Phụ thuộc chỉ hướng vào trong (Dependency Rule)
+            </p>
+          </div>
+          <div class="arch-right">
+            <div class="arch-principle">
+              <h4>🔒 Dependency Rule</h4>
+              <p>
+                Inner layers không biết outer layers tồn tại. Domain không import Express hay
+                Prisma.
+              </p>
+            </div>
+            <div class="arch-principle">
+              <h4>🔌 Constructor Dependency Injection</h4>
+              <p>
+                Service nhận Repository qua constructor → dễ mock khi test, dễ swap implementation.
+              </p>
+            </div>
+            <div class="arch-principle">
+              <h4>🧱 SOLID Principles</h4>
+              <p>
+                SRP: mỗi class một trách nhiệm. OCP: BaseRepository abstract có thể extend. DIP:
+                depend on interfaces, not concretions.
+              </p>
+            </div>
+            <div class="arch-principle">
+              <h4>⚠️ Error Hierarchy</h4>
+              <p>
+                AppError → ValidationError (400) · NotFoundError (404) · ConflictError (409) ·
+                ForbiddenError (403)
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">4 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 5 — MODULE STRUCTURE
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">📦</div>
+        <div>
+          <h2>Backend — Module Structure</h2>
+          <p>
+            Mỗi business domain là một module tự chứa hoàn toàn (domain / application /
+            infrastructure / presentation)
+          </p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div class="module-grid">
+          <div class="module-box">
+            <div class="module-box-head">Business Modules</div>
+            <div class="module-list">
+              <div class="module-item">
+                <div class="dot"></div>
+                <span class="mn">auth/</span
+                ><span class="md">Login, logout, refresh token, JWT</span>
+              </div>
+              <div class="module-item">
+                <div class="dot"></div>
+                <span class="mn">user/</span
+                ><span class="md">CRUD users, roles (ADMIN/STAFF/USER)</span>
+              </div>
+              <div class="module-item">
+                <div class="dot"></div>
+                <span class="mn">room/</span
+                ><span class="md">Rooms + slot availability (day/range/month)</span>
+              </div>
+              <div class="module-item">
+                <div class="dot"></div>
+                <span class="mn">room-type/</span><span class="md">Master data loại phòng</span>
+              </div>
+              <div class="module-item">
+                <div class="dot"></div>
+                <span class="mn">booking/</span
+                ><span class="md">Lifecycle: pending → confirmed → checked_in</span>
+              </div>
+              <div class="module-item">
+                <div class="dot"></div>
+                <span class="mn">payment/</span
+                ><span class="md">PayOS integration, webhook, QR code</span>
+              </div>
+              <div class="module-item">
+                <div class="dot"></div>
+                <span class="mn">schedule/</span
+                ><span class="md">Weekly open/close schedule per room</span>
+              </div>
+              <div class="module-item">
+                <div class="dot"></div>
+                <span class="mn">blocked-slot/</span
+                ><span class="md">Date-range blocks (bảo trì, vệ sinh...)</span>
+              </div>
+              <div class="module-item">
+                <div class="dot"></div>
+                <span class="mn">late-checkout/</span
+                ><span class="md">Yêu cầu &amp; phê duyệt trả phòng muộn</span>
+              </div>
+              <div class="module-item">
+                <div class="dot"></div>
+                <span class="mn">audit-log/</span><span class="md">Immutable audit trail</span>
+              </div>
+            </div>
+          </div>
+          <div class="module-box">
+            <div class="module-box-head">Cấu trúc bên trong mỗi module</div>
+            <div
+              class="module-list"
+              style="font-family: monospace; font-size: 13px; line-height: 2"
+            >
+              <div style="color: #57534e">
+                src/modules/<span style="color: #5eead4">booking</span>/
+              </div>
+              <div style="color: #5eead4">│ ├── domain/</div>
+              <div style="color: #a8a29e">│ │ ├── entities/booking.entity.ts</div>
+              <div style="color: #a8a29e">│ │ └── repositories/booking.repo.interface.ts</div>
+              <div style="color: #5eead4">│ ├── application/</div>
+              <div style="color: #a8a29e">│ │ ├── dto/booking.dto.ts</div>
+              <div style="color: #a8a29e">│ │ └── services/booking.service.ts</div>
+              <div style="color: #5eead4">│ ├── infrastructure/</div>
+              <div style="color: #a8a29e">│ │ └── repositories/prisma-booking.repo.ts</div>
+              <div style="color: #5eead4">│ └── presentation/</div>
+              <div style="color: #a8a29e">│ ├── controllers/booking.controller.ts</div>
+              <div style="color: #a8a29e">│ ├── routes/booking.routes.ts</div>
+              <div style="color: #a8a29e">│ └── validators/booking.validator.ts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">5 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 6 — DATABASE SCHEMA
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">🗄️</div>
+        <div>
+          <h2>Database Schema — PostgreSQL + Prisma</h2>
+          <p>11 bảng, quan hệ rõ ràng, index tối ưu trên các query thường dùng</p>
+        </div>
+      </div>
+      <div class="slide-body" style="padding-top: 28px">
+        <div class="db-grid">
+          <div class="db-table">
+            <div class="db-table-head">User</div>
+            <div class="db-field"><span class="fn">id</span><span class="pk">PK</span></div>
+            <div class="db-field"><span class="fn">email</span><span class="ft">unique</span></div>
+            <div class="db-field">
+              <span class="fn">role</span><span class="ft">ADMIN|STAFF|USER</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">status</span><span class="ft">ACTIVE|SUSPENDED</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">loginAttempts</span><span class="ft">Int</span>
+            </div>
+          </div>
+          <div class="db-table">
+            <div class="db-table-head">Room</div>
+            <div class="db-field"><span class="fn">id</span><span class="pk">PK</span></div>
+            <div class="db-field"><span class="fn">roomTypeId</span><span class="ft">FK</span></div>
+            <div class="db-field"><span class="fn">code</span><span class="ft">unique</span></div>
+            <div class="db-field">
+              <span class="fn">status</span><span class="ft">available|maintenance</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">amenities</span><span class="ft">Json</span>
+            </div>
+          </div>
+          <div class="db-table">
+            <div class="db-table-head">Booking</div>
+            <div class="db-field"><span class="fn">id</span><span class="pk">PK</span></div>
+            <div class="db-field">
+              <span class="fn">bookingRef</span><span class="ft">unique</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">checkIn/Out</span><span class="ft">Date</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">status</span><span class="ft">pending→completed</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">paymentStatus</span><span class="ft">unpaid|paid|refunded</span>
+            </div>
+          </div>
+          <div class="db-table">
+            <div class="db-table-head">Payment</div>
+            <div class="db-field"><span class="fn">id</span><span class="pk">PK</span></div>
+            <div class="db-field">
+              <span class="fn">orderCode</span><span class="ft">BigInt (PayOS)</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">checkoutUrl</span><span class="ft">PayOS link</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">qrCode</span><span class="ft">QR string</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">status</span><span class="ft">unpaid|paid|refunded</span>
+            </div>
+          </div>
+          <div class="db-table">
+            <div class="db-table-head light">RoomType</div>
+            <div class="db-field"><span class="fn">id</span><span class="pk">PK</span></div>
+            <div class="db-field"><span class="fn">name</span><span class="ft">unique</span></div>
+            <div class="db-field">
+              <span class="fn">basePricePerNight</span><span class="ft">Decimal</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">defaultCapacity</span><span class="ft">Int</span>
+            </div>
+          </div>
+          <div class="db-table">
+            <div class="db-table-head light">Schedule</div>
+            <div class="db-field"><span class="fn">roomId</span><span class="ft">FK</span></div>
+            <div class="db-field">
+              <span class="fn">availableOfWeek</span><span class="ft">0(Sun)–6(Sat)</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">openTime</span><span class="ft">HH:MM</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">isClosed</span><span class="ft">Boolean</span>
+            </div>
+          </div>
+          <div class="db-table">
+            <div class="db-table-head light">BlockedSlot</div>
+            <div class="db-field"><span class="fn">roomId</span><span class="ft">FK</span></div>
+            <div class="db-field">
+              <span class="fn">startAt / endAt</span><span class="ft">DateTime</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">reason</span><span class="ft">maintenance|cleaning</span>
+            </div>
+          </div>
+          <div class="db-table">
+            <div class="db-table-head gray">AuditLog</div>
+            <div class="db-field">
+              <span class="fn">action</span><span class="ft">AuditActionType</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">resource</span><span class="ft">User|Booking</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">changes</span><span class="ft">Json (old→new)</span>
+            </div>
+            <div class="db-field">
+              <span class="fn">ipAddress</span><span class="ft">VarChar</span>
+            </div>
+          </div>
+        </div>
+        <div class="db-relations" style="margin-top: 14px">
+          <h4>Quan hệ chính</h4>
+          <div style="display: flex; gap: 40px; flex-wrap: wrap">
+            <span class="rel-line"
+              ><span>RoomType</span> ──&lt; Room ──&lt; Booking ──&lt; Payment ──&lt;
+              PaymentTransaction</span
+            >
+            <span class="rel-line"
+              >Room ──&lt; <span>Schedule</span> (weekly) &nbsp;|&nbsp; Room ──&lt;
+              <span>BlockedSlot</span> (date range)</span
+            >
+            <span class="rel-line"
+              >Booking ──1 <span>LateCheckOut</span> &nbsp;|&nbsp; User ──&lt;
+              <span>AuditLog</span> (immutable)</span
+            >
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">6 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 7 — AUTH & SECURITY
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">🔐</div>
+        <div>
+          <h2>Auth System &amp; Phân quyền</h2>
+          <p>JWT Access + Refresh Token Rotation · Redis blacklist · Role-Based Access Control</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div class="flow-wrapper">
+          <div>
+            <p
+              style="
+                font-size: 13px;
+                font-weight: 700;
+                color: #44403c;
+                margin-bottom: 16px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              "
+            >
+              Auth Flow
+            </p>
+            <div class="flow-steps">
+              <div class="flow-step">
+                <div class="flow-step-left">
+                  <div class="flow-dot">1</div>
+                  <div class="flow-line"></div>
+                </div>
+                <div class="flow-content">
+                  <h4>Login → Access Token + Refresh Token</h4>
+                  <p>
+                    Access token JWT ngắn hạn (15 phút). Refresh token lưu PostgreSQL + Redis, xoay
+                    vòng mỗi lần dùng.
+                  </p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div class="flow-step-left">
+                  <div class="flow-dot">2</div>
+                  <div class="flow-line"></div>
+                </div>
+                <div class="flow-content">
+                  <h4>401 → Auto Refresh</h4>
+                  <p>
+                    Axios interceptor tự động gọi POST /auth/refresh. Các request song song bị 401
+                    được queue lại và replay sau khi refresh thành công.
+                  </p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div class="flow-step-left">
+                  <div class="flow-dot">3</div>
+                  <div class="flow-line"></div>
+                </div>
+                <div class="flow-content">
+                  <h4>Refresh thất bại → Logout</h4>
+                  <p>
+                    Server dispatch custom DOM event
+                    <code
+                      style="
+                        font-size: 11px;
+                        background: #f5f5f4;
+                        padding: 1px 5px;
+                        border-radius: 4px;
+                      "
+                      >auth:logout</code
+                    >
+                    → AuthContext clear localStorage → redirect /login.
+                  </p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div class="flow-step-left"><div class="flow-dot">4</div></div>
+                <div class="flow-content">
+                  <h4>Logout → Token Revoke</h4>
+                  <p>Fire-and-forget revoke request, đồng bộ xóa localStorage.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p
+              style="
+                font-size: 13px;
+                font-weight: 700;
+                color: #44403c;
+                margin-bottom: 16px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              "
+            >
+              Role-Based Access (3 Roles)
+            </p>
+            <table
+              class="role-table"
+              style="border: 1px solid #e7e5e4; border-radius: 12px; overflow: hidden"
+            >
+              <tr>
+                <th>Tính năng</th>
+                <th style="text-align: center">ADMIN</th>
+                <th style="text-align: center">STAFF</th>
+                <th style="text-align: center">USER</th>
+              </tr>
+              <tr>
+                <td>Dashboard tổng quan</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="cross">✗</td>
+              </tr>
+              <tr>
+                <td>Quản lý Booking</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="cross">✗</td>
+              </tr>
+              <tr>
+                <td>Quản lý Phòng</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="cross">✗</td>
+              </tr>
+              <tr>
+                <td>Quản lý Loại phòng</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="cross">✗</td>
+                <td style="text-align: center" class="cross">✗</td>
+              </tr>
+              <tr>
+                <td>Quản lý Nhân viên</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="cross">✗</td>
+                <td style="text-align: center" class="cross">✗</td>
+              </tr>
+              <tr>
+                <td>Báo cáo / Settings</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="cross">✗</td>
+                <td style="text-align: center" class="cross">✗</td>
+              </tr>
+              <tr>
+                <td>Đặt phòng (Customer)</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="check">✓</td>
+                <td style="text-align: center" class="check">✓</td>
+              </tr>
+            </table>
+            <div
+              style="
+                margin-top: 14px;
+                background: #fef3c7;
+                border: 1px solid #fde68a;
+                border-radius: 10px;
+                padding: 12px 16px;
+                font-size: 12.5px;
+                color: #92400e;
+              "
+            >
+              <strong>Rate Limiting:</strong> express-rate-limit chặn brute-force. Account tự lock
+              sau N lần đăng nhập sai (lockedUntil field).
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">7 / 16</div>
+    </div>
+    <!-- ════════════════════════════════════════════════
+     SLIDE 14 — BOOKING MODULE: BE ARCHITECTURE
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">📅</div>
+        <div>
+          <h2>Booking Module — Backend Architecture</h2>
+          <p>Use Case Pattern · Redis Distributed Lock · SSE · Pricing Engine · Cron Scheduler</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px">
+          <!-- LEFT: Use Cases + Services -->
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  background: #f5f5f4;
+                  padding: 11px 18px;
+                  font-size: 12px;
+                  font-weight: 700;
+                  color: #44403c;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                  border-bottom: 1px solid #e7e5e4;
+                "
+              >
+                7 Use Cases (Application Layer)
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0">
+                <div
+                  style="
+                    padding: 10px 18px;
+                    border-right: 1px solid #f0efee;
+                    border-bottom: 1px solid #f0efee;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: #0f766e;
+                      font-family: monospace;
+                    "
+                  >
+                    CreateBookingUseCase
+                  </div>
+                  <div style="font-size: 11px; color: #78716c; margin-top: 2px">
+                    Lock phòng → kiểm tra overlap → tính giá → lưu DB
+                  </div>
+                </div>
+                <div style="padding: 10px 18px; border-bottom: 1px solid #f0efee">
+                  <div
+                    style="
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: #0f766e;
+                      font-family: monospace;
+                    "
+                  >
+                    ConfirmBookingUseCase
+                  </div>
+                  <div style="font-size: 11px; color: #78716c; margin-top: 2px">
+                    pending → confirmed (STAFF/ADMIN)
+                  </div>
+                </div>
+                <div
+                  style="
+                    padding: 10px 18px;
+                    border-right: 1px solid #f0efee;
+                    border-bottom: 1px solid #f0efee;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: #0f766e;
+                      font-family: monospace;
+                    "
+                  >
+                    CheckInBookingUseCase
+                  </div>
+                  <div style="font-size: 11px; color: #78716c; margin-top: 2px">
+                    confirmed → checked_in + lưu guest JSONB
+                  </div>
+                </div>
+                <div style="padding: 10px 18px; border-bottom: 1px solid #f0efee">
+                  <div
+                    style="
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: #0f766e;
+                      font-family: monospace;
+                    "
+                  >
+                    CheckOutBookingUseCase
+                  </div>
+                  <div style="font-size: 11px; color: #78716c; margin-top: 2px">
+                    checked_in → completed
+                  </div>
+                </div>
+                <div
+                  style="
+                    padding: 10px 18px;
+                    border-right: 1px solid #f0efee;
+                    border-bottom: 1px solid #f0efee;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: #0f766e;
+                      font-family: monospace;
+                    "
+                  >
+                    CancelBookingUseCase
+                  </div>
+                  <div style="font-size: 11px; color: #78716c; margin-top: 2px">
+                    Tính % hoàn tiền theo policy → cancelled
+                  </div>
+                </div>
+                <div style="padding: 10px 18px; border-bottom: 1px solid #f0efee">
+                  <div
+                    style="
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: #0f766e;
+                      font-family: monospace;
+                    "
+                  >
+                    NoShowBookingUseCase
+                  </div>
+                  <div style="font-size: 11px; color: #78716c; margin-top: 2px">
+                    confirmed → no_show (quá giờ nhận phòng)
+                  </div>
+                </div>
+                <div style="padding: 10px 18px; grid-column: span 2">
+                  <div
+                    style="
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: #0f766e;
+                      font-family: monospace;
+                    "
+                  >
+                    GetBookingUseCase
+                  </div>
+                  <div style="font-size: 11px; color: #78716c; margin-top: 2px">
+                    Đọc từ Redis cache trước, miss → query Prisma
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  background: #f5f5f4;
+                  padding: 11px 18px;
+                  font-size: 12px;
+                  font-weight: 700;
+                  color: #44403c;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                  border-bottom: 1px solid #e7e5e4;
+                "
+              >
+                Application Services
+              </div>
+              <div style="padding: 12px 18px; display: flex; flex-direction: column; gap: 8px">
+                <div style="font-size: 12.5px">
+                  <span style="color: #0f766e; font-weight: 700; font-family: monospace"
+                    >BookingPricingService</span
+                  >
+                  <span style="color: #78716c">— tính roomRatePerNight × nights = totalAmount</span>
+                </div>
+                <div style="font-size: 12.5px">
+                  <span style="color: #0f766e; font-weight: 700; font-family: monospace"
+                    >BookingRefService</span
+                  >
+                  <span style="color: #78716c"
+                    >— sinh mã
+                    <code
+                      style="
+                        font-size: 11px;
+                        background: #f5f5f4;
+                        padding: 1px 4px;
+                        border-radius: 3px;
+                      "
+                      >BK-20260521-AB12CD34</code
+                    ></span
+                  >
+                </div>
+                <div style="font-size: 12.5px">
+                  <span style="color: #0f766e; font-weight: 700; font-family: monospace"
+                    >BookingAuthorizationService</span
+                  >
+                  <span style="color: #78716c">— kiểm quyền: USER chỉ xem booking của mình</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Redis Lock + SSE + Scheduler + API list -->
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <div
+              style="
+                background: #ccfbf1;
+                border: 1px solid #5eead4;
+                border-radius: 14px;
+                padding: 16px 20px;
+              "
+            >
+              <h4 style="font-size: 13px; font-weight: 700; color: #0f766e; margin-bottom: 10px">
+                ⚡ Redis Distributed Lock
+              </h4>
+              <div style="font-size: 12px; color: #0d9488; line-height: 1.7">
+                Khi user bắt đầu điền form đặt phòng, server acquire Redis lock cho
+                <code
+                  style="
+                    font-size: 11px;
+                    background: rgba(255, 255, 255, 0.5);
+                    padding: 1px 5px;
+                    border-radius: 3px;
+                  "
+                  >room:{roomId}</code
+                >.<br />
+                FE gửi <strong>heartbeat</strong> mỗi 30s để gia hạn TTL lock.<br />
+                Nếu user khác cố đặt cùng phòng → trả về <strong>409 Conflict</strong>.<br />
+                Lock tự giải phóng sau khi tạo booking thành công.
+              </div>
+            </div>
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 16px 20px;
+              "
+            >
+              <h4 style="font-size: 13px; font-weight: 700; color: #1c1917; margin-bottom: 10px">
+                📡 SSE — Server-Sent Events
+              </h4>
+              <div style="font-size: 12px; color: #78716c; line-height: 1.7">
+                <code
+                  style="font-size: 11px; background: #f5f5f4; padding: 1px 5px; border-radius: 3px"
+                  >GET /bookings/locks/rooms/:roomId/subscribe</code
+                ><br />
+                FE mở stream SSE khi phòng bị lock. Server push event
+                <strong>room_available</strong> ngay khi lock được giải phóng → FE tự động mời user
+                thử lại mà không cần polling.
+              </div>
+            </div>
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 16px 20px;
+              "
+            >
+              <h4 style="font-size: 13px; font-weight: 700; color: #1c1917; margin-bottom: 10px">
+                ⏰ Cron Scheduler
+              </h4>
+              <div style="font-size: 12px; color: #78716c; line-height: 1.7">
+                <code
+                  style="font-size: 11px; background: #f5f5f4; padding: 1px 5px; border-radius: 3px"
+                  >pending-booking.scheduler.ts</code
+                >
+                chạy định kỳ:<br />
+                <strong>pending → cancelled</strong> khi hết thời hạn thanh toán.<br />
+                <strong>confirmed → no_show</strong> khi quá giờ check-in mà khách không đến.
+              </div>
+            </div>
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 14px 18px;
+              "
+            >
+              <h4
+                style="
+                  font-size: 12px;
+                  font-weight: 700;
+                  color: #44403c;
+                  margin-bottom: 8px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.4px;
+                "
+              >
+                API Endpoints
+              </h4>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 5px;
+                  font-size: 11.5px;
+                  font-family: monospace;
+                "
+              >
+                <div>
+                  <span style="color: #16a34a; font-weight: 700">POST</span>
+                  <span style="color: #0f766e">/bookings</span>
+                  <span style="color: #a8a29e">— Tạo booking (User)</span>
+                </div>
+                <div>
+                  <span style="color: #2563eb; font-weight: 700">PATCH</span>
+                  <span style="color: #0f766e">/bookings/:id/confirm</span>
+                  <span style="color: #a8a29e">— Xác nhận (Staff)</span>
+                </div>
+                <div>
+                  <span style="color: #2563eb; font-weight: 700">PATCH</span>
+                  <span style="color: #0f766e">/bookings/:id/check-in</span>
+                  <span style="color: #a8a29e">— Check-in + guest JSONB (Staff)</span>
+                </div>
+                <div>
+                  <span style="color: #2563eb; font-weight: 700">PATCH</span>
+                  <span style="color: #0f766e">/bookings/:id/check-out</span>
+                  <span style="color: #a8a29e">— Check-out (Staff)</span>
+                </div>
+                <div>
+                  <span style="color: #16a34a; font-weight: 700">POST</span>
+                  <span style="color: #0f766e">/bookings/:id/cancel</span>
+                  <span style="color: #a8a29e">— Huỷ + tính hoàn tiền</span>
+                </div>
+                <div>
+                  <span style="color: #78716c; font-weight: 700">GET</span>
+                  <span style="color: #0f766e">/bookings/my</span>
+                  <span style="color: #a8a29e">— Lịch sử đặt phòng (User)</span>
+                </div>
+                <div>
+                  <span style="color: #16a34a; font-weight: 700">POST</span>
+                  <span style="color: #0f766e">/bookings/locks/heartbeat</span>
+                  <span style="color: #a8a29e">— Gia hạn Redis lock</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">14 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 15 — BOOKING MODULE: FE + FULL FLOW
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">🖥️</div>
+        <div>
+          <h2>Booking Module — Frontend &amp; Full End-to-End Flow</h2>
+          <p>3 Pages · 4 Hooks · Refund Policy · Lifecycle từ User đến Staff</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div style="display: grid; grid-template-columns: 5fr 7fr; gap: 28px">
+          <!-- LEFT: FE Structure -->
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  background: #f5f5f4;
+                  padding: 11px 18px;
+                  font-size: 12px;
+                  font-weight: 700;
+                  color: #44403c;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                  border-bottom: 1px solid #e7e5e4;
+                "
+              >
+                FE Feature Structure
+              </div>
+              <div
+                style="
+                  padding: 14px 18px;
+                  font-family: monospace;
+                  font-size: 12.5px;
+                  line-height: 2;
+                  color: #d6d3d1;
+                  background: #1c1917;
+                  border-radius: 0 0 13px 13px;
+                "
+              >
+                <span style="color: #5eead4">features/booking/</span><br />
+                <span style="color: #a8a29e">├── pages/</span><br />
+                <span style="color: #fbbf24">&nbsp;&nbsp;├── BookingNewPage</span
+                ><span style="color: #57534e"> &nbsp;# Tạo booking</span><br />
+                <span style="color: #fbbf24">&nbsp;&nbsp;├── BookingListPage</span
+                ><span style="color: #57534e"> # Lịch sử</span><br />
+                <span style="color: #fbbf24">&nbsp;&nbsp;└── BookingDetailPage</span
+                ><span style="color: #57534e"> # Chi tiết</span><br />
+                <span style="color: #a8a29e">├── hooks/</span><br />
+                <span style="color: #86efac">&nbsp;&nbsp;├── useBookings</span
+                ><span style="color: #57534e"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Admin list</span
+                ><br />
+                <span style="color: #86efac">&nbsp;&nbsp;├── useMyBookings</span
+                ><span style="color: #57534e"> &nbsp;&nbsp;&nbsp;# User list</span><br />
+                <span style="color: #86efac">&nbsp;&nbsp;├── useBookingDetail</span
+                ><span style="color: #57534e"> &nbsp;# Chi tiết</span><br />
+                <span style="color: #86efac">&nbsp;&nbsp;└── useAdminBookings</span
+                ><span style="color: #57534e"> # CRUD admin</span><br />
+                <span style="color: #a8a29e">├── components/</span><br />
+                <span style="color: #c4b5fd">&nbsp;&nbsp;├── BookingCard</span><br />
+                <span style="color: #c4b5fd">&nbsp;&nbsp;├── BookingStatusBadge</span><br />
+                <span style="color: #c4b5fd">&nbsp;&nbsp;├── BookingActionsDropdown</span><br />
+                <span style="color: #c4b5fd">&nbsp;&nbsp;├── CheckInModal</span><br />
+                <span style="color: #c4b5fd">&nbsp;&nbsp;├── CheckOutModal</span><br />
+                <span style="color: #c4b5fd">&nbsp;&nbsp;└── CancelBookingModal</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Full E2E Flow + Refund Policy -->
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <!-- E2E Flow -->
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 16px 20px;
+              "
+            >
+              <h4 style="font-size: 13px; font-weight: 700; color: #1c1917; margin-bottom: 12px">
+                🔄 End-to-End Booking Flow
+              </h4>
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
+                <div
+                  style="
+                    background: #fef3c7;
+                    color: #92400e;
+                    padding: 5px 12px;
+                    border-radius: 100px;
+                    font-size: 11.5px;
+                    font-weight: 700;
+                  "
+                >
+                  ① Chọn phòng
+                </div>
+                <span style="color: #a8a29e; font-size: 14px">→</span>
+                <div
+                  style="
+                    background: #dbeafe;
+                    color: #1d4ed8;
+                    padding: 5px 12px;
+                    border-radius: 100px;
+                    font-size: 11.5px;
+                    font-weight: 700;
+                  "
+                >
+                  ② Redis Lock
+                </div>
+                <span style="color: #a8a29e; font-size: 14px">→</span>
+                <div
+                  style="
+                    background: #dbeafe;
+                    color: #1d4ed8;
+                    padding: 5px 12px;
+                    border-radius: 100px;
+                    font-size: 11.5px;
+                    font-weight: 700;
+                  "
+                >
+                  ③ Điền form
+                </div>
+                <span style="color: #a8a29e; font-size: 14px">→</span>
+                <div
+                  style="
+                    background: #fef3c7;
+                    color: #92400e;
+                    padding: 5px 12px;
+                    border-radius: 100px;
+                    font-size: 11.5px;
+                    font-weight: 700;
+                  "
+                >
+                  ④ pending
+                </div>
+                <span style="color: #a8a29e; font-size: 14px">→</span>
+                <div
+                  style="
+                    background: #ccfbf1;
+                    color: #0f766e;
+                    padding: 5px 12px;
+                    border-radius: 100px;
+                    font-size: 11.5px;
+                    font-weight: 700;
+                  "
+                >
+                  ⑤ QR Payment
+                </div>
+                <span style="color: #a8a29e; font-size: 14px">→</span>
+                <div
+                  style="
+                    background: #ccfbf1;
+                    color: #0f766e;
+                    padding: 5px 12px;
+                    border-radius: 100px;
+                    font-size: 11.5px;
+                    font-weight: 700;
+                  "
+                >
+                  ⑥ confirmed
+                </div>
+                <span style="color: #a8a29e; font-size: 14px">→</span>
+                <div
+                  style="
+                    background: #ede9fe;
+                    color: #7c3aed;
+                    padding: 5px 12px;
+                    border-radius: 100px;
+                    font-size: 11.5px;
+                    font-weight: 700;
+                  "
+                >
+                  ⑦ check-in
+                </div>
+                <span style="color: #a8a29e; font-size: 14px">→</span>
+                <div
+                  style="
+                    background: #dcfce7;
+                    color: #15803d;
+                    padding: 5px 12px;
+                    border-radius: 100px;
+                    font-size: 11.5px;
+                    font-weight: 700;
+                  "
+                >
+                  ⑧ completed
+                </div>
+              </div>
+              <div style="margin-top: 10px; font-size: 11.5px; color: #78716c">
+                <strong>Heartbeat:</strong> FE tự động gửi POST /locks/heartbeat mỗi 30s trong khi
+                user còn trên form.<br />
+                <strong>SSE:</strong> Nếu phòng bị lock → FE subscribe stream, nhận event
+                <code
+                  style="font-size: 10px; background: #f5f5f4; padding: 1px 4px; border-radius: 3px"
+                  >room_available</code
+                >
+                và tự unlock UI.
+              </div>
+            </div>
+
+            <!-- Refund Policy -->
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  background: #f5f5f4;
+                  padding: 11px 18px;
+                  font-size: 12px;
+                  font-weight: 700;
+                  color: #44403c;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                  border-bottom: 1px solid #e7e5e4;
+                "
+              >
+                💰 Chính sách hoàn tiền (CancelBookingUseCase)
+              </div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 12.5px">
+                <tr style="background: #fafaf9">
+                  <th
+                    style="
+                      padding: 9px 16px;
+                      text-align: left;
+                      font-weight: 600;
+                      color: #44403c;
+                      border-bottom: 1px solid #e7e5e4;
+                    "
+                  >
+                    Điều kiện
+                  </th>
+                  <th
+                    style="
+                      padding: 9px 16px;
+                      text-align: center;
+                      font-weight: 600;
+                      color: #44403c;
+                      border-bottom: 1px solid #e7e5e4;
+                    "
+                  >
+                    % Hoàn tiền
+                  </th>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 16px; color: #44403c; border-bottom: 1px solid #f0efee">
+                    Lý do <strong>lỗi phòng</strong> (room_issue)
+                  </td>
+                  <td style="padding: 8px 16px; text-align: center">
+                    <span
+                      style="
+                        background: #dcfce7;
+                        color: #15803d;
+                        padding: 2px 10px;
+                        border-radius: 100px;
+                        font-weight: 700;
+                        font-size: 12px;
+                      "
+                      >100%</span
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 16px; color: #44403c; border-bottom: 1px solid #f0efee">
+                    Trong vòng 1h sau khi đặt (grace period)
+                  </td>
+                  <td style="padding: 8px 16px; text-align: center">
+                    <span
+                      style="
+                        background: #dcfce7;
+                        color: #15803d;
+                        padding: 2px 10px;
+                        border-radius: 100px;
+                        font-weight: 700;
+                        font-size: 12px;
+                      "
+                      >100%</span
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 16px; color: #44403c; border-bottom: 1px solid #f0efee">
+                    Trước check-in <strong>≥ 7 ngày</strong>
+                  </td>
+                  <td style="padding: 8px 16px; text-align: center">
+                    <span
+                      style="
+                        background: #dcfce7;
+                        color: #15803d;
+                        padding: 2px 10px;
+                        border-radius: 100px;
+                        font-weight: 700;
+                        font-size: 12px;
+                      "
+                      >100%</span
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 16px; color: #44403c; border-bottom: 1px solid #f0efee">
+                    Trước check-in <strong>3–6 ngày</strong>
+                  </td>
+                  <td style="padding: 8px 16px; text-align: center">
+                    <span
+                      style="
+                        background: #fef3c7;
+                        color: #92400e;
+                        padding: 2px 10px;
+                        border-radius: 100px;
+                        font-weight: 700;
+                        font-size: 12px;
+                      "
+                      >70%</span
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 16px; color: #44403c; border-bottom: 1px solid #f0efee">
+                    Trước check-in <strong>1–2 ngày</strong>
+                  </td>
+                  <td style="padding: 8px 16px; text-align: center">
+                    <span
+                      style="
+                        background: #ffedd5;
+                        color: #c2410c;
+                        padding: 2px 10px;
+                        border-radius: 100px;
+                        font-weight: 700;
+                        font-size: 12px;
+                      "
+                      >30%</span
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 16px; color: #44403c">Cùng ngày / no-show</td>
+                  <td style="padding: 8px 16px; text-align: center">
+                    <span
+                      style="
+                        background: #fee2e2;
+                        color: #dc2626;
+                        padding: 2px 10px;
+                        border-radius: 100px;
+                        font-weight: 700;
+                        font-size: 12px;
+                      "
+                      >0%</span
+                    >
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">15 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 8 — PAYMENT FLOW
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">💳</div>
+        <div>
+          <h2>Payment Flow — PayOS Integration</h2>
+          <p>QR Code · Webhook · Countdown Timer · Auto status update</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 36px;
+            align-items: center;
+            height: 100%;
+          "
+        >
+          <div>
+            <div class="payment-flow">
+              <div class="payment-row">
+                <div class="payment-box">
+                  <h4>① Khách tạo Booking</h4>
+                  <p>
+                    Chọn phòng, ngày, số khách → tạo booking với status: <strong>pending</strong>
+                  </p>
+                </div>
+              </div>
+              <div class="payment-arrow-down">↓</div>
+              <div class="payment-row">
+                <div class="payment-box teal-box">
+                  <h4>② Server tạo PayOS Order</h4>
+                  <p>
+                    POST <code>/api/v1/payments/create</code> → PayOS trả về
+                    <strong>checkoutUrl</strong> + <strong>QR Code</strong>
+                  </p>
+                </div>
+              </div>
+              <div class="payment-arrow-down">↓</div>
+              <div class="payment-row">
+                <div class="payment-box">
+                  <h4>③ FE hiển thị QR + Countdown</h4>
+                  <p>qrcode.react render mã QR. Timer đếm ngược 15 phút, hết hạn auto cancel.</p>
+                </div>
+              </div>
+              <div class="payment-arrow-down">↓</div>
+              <div class="payment-row">
+                <div class="payment-box teal-box">
+                  <h4>④ PayOS gửi Webhook</h4>
+                  <p>
+                    POST <code>/api/v1/payments/webhook</code> → Server xác thực signature → cập
+                    nhật <strong>PaymentStatus: paid</strong> +
+                    <strong>BookingStatus: confirmed</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 24px;
+              "
+            >
+              <h4 style="font-size: 14px; font-weight: 700; color: #1c1917; margin-bottom: 12px">
+                📊 Booking Status Lifecycle
+              </h4>
+              <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px">
+                <div style="display: flex; align-items: center; gap: 8px">
+                  <span
+                    style="
+                      background: #fef3c7;
+                      color: #92400e;
+                      padding: 3px 10px;
+                      border-radius: 100px;
+                      font-weight: 600;
+                      font-size: 11px;
+                    "
+                    >pending</span
+                  >
+                  <span style="color: #a8a29e">→</span>
+                  <span
+                    style="
+                      background: #dbeafe;
+                      color: #1d4ed8;
+                      padding: 3px 10px;
+                      border-radius: 100px;
+                      font-weight: 600;
+                      font-size: 11px;
+                    "
+                    >confirmed</span
+                  >
+                  <span style="color: #a8a29e">→</span>
+                  <span
+                    style="
+                      background: #ccfbf1;
+                      color: #0f766e;
+                      padding: 3px 10px;
+                      border-radius: 100px;
+                      font-weight: 600;
+                      font-size: 11px;
+                    "
+                    >checked_in</span
+                  >
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px">
+                  <span
+                    style="
+                      background: #dcfce7;
+                      color: #15803d;
+                      padding: 3px 10px;
+                      border-radius: 100px;
+                      font-weight: 600;
+                      font-size: 11px;
+                    "
+                    >completed</span
+                  >
+                  <span style="color: #a8a29e">|</span>
+                  <span
+                    style="
+                      background: #fee2e2;
+                      color: #dc2626;
+                      padding: 3px 10px;
+                      border-radius: 100px;
+                      font-weight: 600;
+                      font-size: 11px;
+                    "
+                    >cancelled</span
+                  >
+                  <span style="color: #a8a29e">|</span>
+                  <span
+                    style="
+                      background: #f5f5f4;
+                      color: #78716c;
+                      padding: 3px 10px;
+                      border-radius: 100px;
+                      font-weight: 600;
+                      font-size: 11px;
+                    "
+                    >no_show</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 24px;
+              "
+            >
+              <h4 style="font-size: 14px; font-weight: 700; color: #1c1917; margin-bottom: 12px">
+                🕐 Late Checkout
+              </h4>
+              <p style="font-size: 13px; color: #78716c; line-height: 1.6">
+                Khách request trả phòng muộn → Staff/Admin phê duyệt → Kiểm tra conflict với booking
+                kế tiếp → Tính phí phụ nếu có. Status: requested → approved/denied → charged.
+              </p>
+            </div>
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 24px;
+              "
+            >
+              <h4 style="font-size: 14px; font-weight: 700; color: #1c1917; margin-bottom: 8px">
+                ⏰ Cron Jobs
+              </h4>
+              <p style="font-size: 13px; color: #78716c">
+                node-cron tự động chuyển booking <strong>pending → cancelled</strong> khi hết thời
+                gian thanh toán và <strong>confirmed → no_show</strong> khi quá giờ check-in.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">8 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 9 — FRONTEND TECH STACK
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">🖥️</div>
+        <div>
+          <h2>Frontend — Technology Stack</h2>
+          <p>React 18 · TypeScript Strict · Vite 6 · TailwindCSS</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div class="tech-grid">
+          <div class="tech-card">
+            <span class="icon">⚛️</span>
+            <span class="name">React 18</span>
+            <span class="role">UI runtime, Concurrent Features</span>
+            <span class="badge badge-teal">Core</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">⚡</span>
+            <span class="name">Vite 6</span>
+            <span class="role">Dev server cực nhanh + HMR, ESM native</span>
+            <span class="badge badge-teal">Build</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🎨</span>
+            <span class="name">TailwindCSS 3</span>
+            <span class="role">Utility-first CSS, không dùng UI library nào</span>
+            <span class="badge badge-blue">Styling</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🗺️</span>
+            <span class="name">React Router v6</span>
+            <span class="role">SPA routing, nested routes, lazy loading</span>
+            <span class="badge badge-blue">Routing</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">📝</span>
+            <span class="name">React Hook Form</span>
+            <span class="role">Form state management hiệu suất cao</span>
+            <span class="badge badge-purple">Forms</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">✅</span>
+            <span class="name">Zod</span>
+            <span class="role">Schema validation cho form (zodResolver)</span>
+            <span class="badge badge-purple">Validation</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🌐</span>
+            <span class="name">Axios</span>
+            <span class="role">HTTP client + interceptors (auth, retry 401)</span>
+            <span class="badge badge-orange">HTTP</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🌍</span>
+            <span class="name">react-i18next</span>
+            <span class="role">Đa ngôn ngữ: Tiếng Việt (mặc định) + EN</span>
+            <span class="badge badge-orange">i18n</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">📊</span>
+            <span class="name">Recharts</span>
+            <span class="role">Biểu đồ cho Dashboard reports</span>
+            <span class="badge badge-gray">Charts</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">📱</span>
+            <span class="name">qrcode.react</span>
+            <span class="role">Hiển thị QR code thanh toán PayOS</span>
+            <span class="badge badge-gray">Payment</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🧪</span>
+            <span class="name">Vitest + Testing Library</span>
+            <span class="role">Unit test component, hooks</span>
+            <span class="badge badge-gray">Testing</span>
+          </div>
+          <div class="tech-card">
+            <span class="icon">🐶</span>
+            <span class="name">Husky + lint-staged</span>
+            <span class="role">Pre-commit: ESLint + Prettier tự động</span>
+            <span class="badge badge-gray">DX</span>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">9 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 10 — FE ARCHITECTURE
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">🏛️</div>
+        <div>
+          <h2>Frontend — Feature-Sliced Architecture</h2>
+          <p>Mỗi feature tự chứa · Layer rõ ràng · Không prop drilling quá 2 cấp</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div class="fe-arch">
+          <div class="folder-tree">
+            <span class="dir">src/</span><br />
+            <span class="file">├── </span><span class="dir">app/</span>
+            <span class="comment"># AppProvider, router, Suspense</span><br />
+            <span class="file">├── </span><span class="dir">features/</span>
+            <span class="comment"># Business domains</span><br />
+            <span class="file">│ ├── </span><span class="dir">home/</span>
+            <span class="comment">· room/ · auth/</span><br />
+            <span class="file">│ ├── </span><span class="dir">booking/</span>
+            <span class="comment">· payment/ · profile/</span><br />
+            <span class="file">│ ├── </span><span class="dir">dashboard/</span>
+            <span class="comment">· schedule/</span><br />
+            <span class="file">│ └── </span><span class="dir">blocked-slot/ · late-checkout/</span
+            ><br />
+            <span class="file">├── </span><span class="dir">common/</span>
+            <span class="comment"># Shared UI + hooks + utils</span><br />
+            <span class="file">│ ├── </span><span class="dir">components/ui/</span><br />
+            <span class="file">│ ├── </span><span class="dir">components/layout/</span><br />
+            <span class="file">│ └── </span><span class="dir">hooks/ · utils/</span><br />
+            <span class="file">├── </span><span class="dir">contexts/</span>
+            <span class="comment"># AuthContext · ToastContext</span><br />
+            <span class="file">├── </span><span class="dir">lib/</span>
+            <span class="comment"># axios.instance + interceptors</span><br />
+            <span class="file">├── </span><span class="dir">types/</span>
+            <span class="comment"># api.types (ApiResponse&lt;T&gt;)</span><br />
+            <span class="file">└── </span><span class="dir">i18n/</span>
+            <span class="comment"># locales/vi · locales/en</span>
+          </div>
+          <div class="fe-layers">
+            <p
+              style="
+                font-size: 13px;
+                font-weight: 700;
+                color: #44403c;
+                margin-bottom: 4px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              "
+            >
+              Luồng dữ liệu trong mỗi feature
+            </p>
+            <div class="fe-layer-row">
+              <div class="fe-layer-icon">🎨</div>
+              <div class="fe-layer-text">
+                <h4>Component</h4>
+                <p>Nhận data từ hook, render UI. Không gọi service trực tiếp.</p>
+              </div>
+            </div>
+            <div style="padding-left: 22px; color: #e7e5e4; font-size: 18px">↑</div>
+            <div class="fe-layer-row">
+              <div class="fe-layer-icon">🪝</div>
+              <div class="fe-layer-text">
+                <h4>Custom Hook</h4>
+                <p>
+                  Quản lý isLoading / error / data. Cancel async bằng
+                  <code style="font-size: 11px">cancelled</code> flag.
+                </p>
+              </div>
+            </div>
+            <div style="padding-left: 22px; color: #e7e5e4; font-size: 18px">↑</div>
+            <div class="fe-layer-row">
+              <div class="fe-layer-icon">🌐</div>
+              <div class="fe-layer-text">
+                <h4>Service</h4>
+                <p>Gọi Axios, unwrap API envelope (ApiResponse&lt;T&gt;). Không có state.</p>
+              </div>
+            </div>
+            <div style="padding-left: 22px; color: #e7e5e4; font-size: 18px">↑</div>
+            <div class="fe-layer-row">
+              <div class="fe-layer-icon">⚡</div>
+              <div class="fe-layer-text">
+                <h4>Axios Instance</h4>
+                <p>
+                  Interceptor inject Auth header, auto retry 401, normalize error sang ApiError.
+                </p>
+              </div>
+            </div>
+            <div
+              style="
+                margin-top: 16px;
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 12px;
+                padding: 16px;
+              "
+            >
+              <p style="font-size: 12.5px; color: #78716c">
+                <strong style="color: #1c1917">API Envelope:</strong> Server luôn trả
+                <code
+                  style="font-size: 11px; background: #f5f5f4; padding: 1px 5px; border-radius: 4px"
+                  >ApiResponse&lt;T&gt;</code
+                >
+                hoặc
+                <code
+                  style="font-size: 11px; background: #f5f5f4; padding: 1px 5px; border-radius: 4px"
+                  >ApiPaginatedResponse&lt;T&gt;</code
+                >. Service unwrap trước khi trả cho hook.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">10 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 11 — ROUTING
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">🗺️</div>
+        <div>
+          <h2>Frontend — Routing &amp; Layouts</h2>
+          <p>3 layout shell · Route guards · React.lazy Code Splitting</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div class="routing-grid">
+          <div class="route-group">
+            <div class="route-group-head">
+              <span class="icon">🌐</span>
+              <span class="title">PublicLayout</span>
+              <span class="guard guard-none">Không cần auth</span>
+            </div>
+            <div class="route-list">
+              <div class="route-item">
+                <span class="rpath">/</span><span class="rdesc">HomePage — Landing page</span>
+              </div>
+              <div class="route-item">
+                <span class="rpath">/rooms</span
+                ><span class="rdesc">RoomListPage — Danh sách phòng</span>
+              </div>
+              <div class="route-item">
+                <span class="rpath">/rooms/:id</span
+                ><span class="rdesc">RoomDetailPage — Chi tiết phòng</span>
+              </div>
+              <div class="route-item">
+                <span class="rpath">/bookings/*</span
+                ><span class="rdesc">BookingListPage, Detail, New (ProtectedRoute)</span>
+              </div>
+              <div class="route-item">
+                <span class="rpath">/bookings/:id/payment</span
+                ><span class="rdesc">PaymentPage — QR thanh toán</span>
+              </div>
+            </div>
+          </div>
+          <div class="route-group">
+            <div class="route-group-head">
+              <span class="icon">🔐</span>
+              <span class="title">AuthLayout</span>
+              <span class="guard guard-auth">PublicRoute</span>
+            </div>
+            <div class="route-list">
+              <div class="route-item">
+                <span class="rpath">/login</span
+                ><span class="rdesc">LoginPage — Redirect nếu đã login</span>
+              </div>
+              <div class="route-item">
+                <span class="rpath">/register</span
+                ><span class="rdesc">RegisterPage — Redirect nếu đã login</span>
+              </div>
+            </div>
+            <div class="route-group-head" style="margin-top: 8px">
+              <span class="icon">🏢</span>
+              <span class="title">DashboardLayout</span>
+              <span class="guard guard-role">RoleBasedRoute</span>
+            </div>
+            <div class="route-list">
+              <div class="route-item">
+                <span class="rpath">/dashboard</span
+                ><span class="rdesc">ADMIN + STAFF — Tổng quan</span>
+              </div>
+              <div class="route-item">
+                <span class="rpath">/dashboard/bookings</span
+                ><span class="rdesc">ADMIN + STAFF — Quản lý đặt phòng</span>
+              </div>
+              <div class="route-item">
+                <span class="rpath">/dashboard/room-types</span
+                ><span class="rdesc">ADMIN only — Loại phòng</span>
+              </div>
+              <div class="route-item">
+                <span class="rpath">/dashboard/reports</span
+                ><span class="rdesc">ADMIN only — Báo cáo thống kê</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="code-split-box" style="margin-top: 16px">
+          <span class="cs-comment"
+            >// Tất cả page dùng React.lazy — code chỉ load khi user navigate đến route đó</span
+          ><br />
+          <span class="cs-kw">const</span> BookingNewPage = <span class="cs-fn">lazy</span>(() =&gt;
+          <span class="cs-fn">import</span>(<span class="cs-str"
+            >'@/features/booking/pages/BookingNewPage'</span
+          >).<span class="cs-fn">then</span>((m) =&gt; ({ default: m.BookingNewPage })));
+        </div>
+      </div>
+      <div class="slide-num">11 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 12 — DESIGN SYSTEM
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">🎨</div>
+        <div>
+          <h2>Frontend — Design System</h2>
+          <p>Tham chiếu Mixivivu.com · Teal accent · Inter font · Minimalist card-based UI</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px">
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 20px 24px;
+              "
+            >
+              <h4 style="font-size: 14px; font-weight: 700; color: #1c1917; margin-bottom: 14px">
+                Bảng màu
+              </h4>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; align-items: center; gap: 12px">
+                  <div
+                    style="width: 32px; height: 32px; border-radius: 8px; background: #14b8a6"
+                  ></div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1c1917">
+                      primary-500: #14b8a6
+                    </div>
+                    <div style="font-size: 11px; color: #78716c">
+                      Brand teal — màu accent duy nhất
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px">
+                  <div
+                    style="
+                      width: 32px;
+                      height: 32px;
+                      border-radius: 8px;
+                      background: #fafaf9;
+                      border: 1px solid #e7e5e4;
+                    "
+                  ></div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1c1917">
+                      neutral-50: #fafaf9
+                    </div>
+                    <div style="font-size: 11px; color: #78716c">
+                      Page background — ấm, không thuần trắng
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px">
+                  <div
+                    style="width: 32px; height: 32px; border-radius: 8px; background: #1c1917"
+                  ></div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1c1917">
+                      neutral-900: #1c1917
+                    </div>
+                    <div style="font-size: 11px; color: #78716c">Headings, footer background</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 20px 24px;
+              "
+            >
+              <h4 style="font-size: 14px; font-weight: 700; color: #1c1917; margin-bottom: 12px">
+                Border Radius Rules
+              </h4>
+              <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px">
+                <div style="display: flex; justify-content: space-between; align-items: center">
+                  <span style="color: #44403c">Buttons</span>
+                  <span
+                    style="
+                      background: #ccfbf1;
+                      color: #0f766e;
+                      padding: 3px 10px;
+                      border-radius: 100px;
+                      font-size: 11px;
+                      font-weight: 600;
+                    "
+                    >rounded-full — always</span
+                  >
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center">
+                  <span style="color: #44403c">Cards, Modals</span>
+                  <span
+                    style="
+                      background: #ccfbf1;
+                      color: #0f766e;
+                      padding: 3px 10px;
+                      border-radius: 100px;
+                      font-size: 11px;
+                      font-weight: 600;
+                    "
+                    >rounded-2xl</span
+                  >
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center">
+                  <span style="color: #44403c">Input fields</span>
+                  <span
+                    style="
+                      background: #ccfbf1;
+                      color: #0f766e;
+                      padding: 3px 10px;
+                      border-radius: 100px;
+                      font-size: 11px;
+                      font-weight: 600;
+                    "
+                    >rounded-xl</span
+                  >
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center">
+                  <span style="color: #44403c">Badges, Tags</span>
+                  <span
+                    style="
+                      background: #ccfbf1;
+                      color: #0f766e;
+                      padding: 3px 10px;
+                      border-radius: 100px;
+                      font-size: 11px;
+                      font-weight: 600;
+                    "
+                    >rounded-full</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 20px 24px;
+              "
+            >
+              <h4 style="font-size: 14px; font-weight: 700; color: #1c1917; margin-bottom: 12px">
+                Component Patterns
+              </h4>
+              <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px">
+                <div>
+                  <strong style="color: #0f766e">Buttons:</strong>
+                  <span style="color: #78716c"
+                    >3 variants (primary/outline/ghost) · 3 sizes · always rounded-full</span
+                  >
+                </div>
+                <div>
+                  <strong style="color: #0f766e">Cards:</strong>
+                  <span style="color: #78716c"
+                    >group hover scale-105 image · shadow-sm → shadow-md on hover</span
+                  >
+                </div>
+                <div>
+                  <strong style="color: #0f766e">Loading:</strong>
+                  <span style="color: #78716c">Skeleton animate-pulse (không dùng spinner)</span>
+                </div>
+                <div>
+                  <strong style="color: #0f766e">Empty state:</strong>
+                  <span style="color: #78716c">illustration + message + CTA (không để trống)</span>
+                </div>
+                <div>
+                  <strong style="color: #0f766e">i18n:</strong>
+                  <span style="color: #78716c"
+                    >Tiếng Việt mặc định, formatCurrency(amount, 'VND', 'vi-VN')</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                background: #fafaf9;
+                border: 1px solid #e7e5e4;
+                border-radius: 14px;
+                padding: 20px 24px;
+              "
+            >
+              <h4 style="font-size: 14px; font-weight: 700; color: #1c1917; margin-bottom: 12px">
+                Performance
+              </h4>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 8px;
+                  font-size: 13px;
+                  color: #78716c;
+                "
+              >
+                <div>
+                  📦 <strong style="color: #1c1917">Code Splitting:</strong> React.lazy + Suspense
+                  toàn bộ pages
+                </div>
+                <div>
+                  🖼️ <strong style="color: #1c1917">Images:</strong> loading="lazy" + width/height
+                  để tránh layout shift
+                </div>
+                <div>
+                  ⏱️ <strong style="color: #1c1917">Debounce:</strong> useDebounce(400ms) trước mọi
+                  API search call
+                </div>
+                <div>
+                  📋 <strong style="color: #1c1917">Pagination:</strong> Không load unbounded data,
+                  dùng usePagination hook
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">12 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 13 — HIGHLIGHTS
+════════════════════════════════════════════════ -->
+    <div class="slide s2">
+      <div class="slide-header">
+        <div class="slide-header-icon">⭐</div>
+        <div>
+          <h2>Điểm nổi bật của dự án</h2>
+          <p>Kiến trúc chuẩn Enterprise · Full-stack TypeScript · Production-ready practices</p>
+        </div>
+      </div>
+      <div class="slide-body">
+        <div class="highlight-grid">
+          <div class="hl-card">
+            <span class="hl-icon">🏗️</span>
+            <h4>Clean Architecture (BE)</h4>
+            <p>
+              4 tầng rõ ràng, Dependency Rule nghiêm ngặt. Domain layer hoàn toàn độc lập với
+              framework — có thể swap Express sang Fastify mà không đụng business logic.
+            </p>
+          </div>
+          <div class="hl-card">
+            <span class="hl-icon">🧩</span>
+            <h4>Feature-Sliced (FE)</h4>
+            <p>
+              Mỗi feature tự chứa: types → service → hook → page → components. Không prop drilling
+              quá 2 cấp. Dễ onboard developer mới vào từng slice.
+            </p>
+          </div>
+          <div class="hl-card">
+            <span class="hl-icon">🔐</span>
+            <h4>JWT Refresh Token Rotation</h4>
+            <p>
+              Concurrent 401 requests được queue và replay. Refresh token xoay vòng sau mỗi lần
+              dùng. Account lock sau N lần login sai.
+            </p>
+          </div>
+          <div class="hl-card">
+            <span class="hl-icon">💳</span>
+            <h4>PayOS QR Payment</h4>
+            <p>
+              Tích hợp PayOS: tạo order → hiển thị QR → nhận webhook → cập nhật trạng thái. Frontend
+              có countdown timer 15 phút, tự cancel nếu hết hạn.
+            </p>
+          </div>
+          <div class="hl-card">
+            <span class="hl-icon">📋</span>
+            <h4>Audit Logging</h4>
+            <p>
+              Immutable log ghi mọi action nhạy cảm (login, tạo user, đổi status, đổi mật khẩu). Lưu
+              cả IP, userAgent và diff changes (old → new).
+            </p>
+          </div>
+          <div class="hl-card">
+            <span class="hl-icon">🛡️</span>
+            <h4>Code Quality Gates</h4>
+            <p>
+              TypeScript strict mode cả FE lẫn BE. Husky pre-commit chạy ESLint + Prettier.
+              Conventional Commits + commitlint. Không thể commit code lỗi.
+            </p>
+          </div>
+          <div class="hl-card">
+            <span class="hl-icon">🐳</span>
+            <h4>Docker Compose Ready</h4>
+            <p>
+              3 service: Node.js App + PostgreSQL 16 + Redis 7. Health checks, volume persistence,
+              bridge network. Một lệnh <code style="font-size: 11px">docker compose up</code> là
+              chạy.
+            </p>
+          </div>
+          <div class="hl-card">
+            <span class="hl-icon">🌍</span>
+            <h4>i18n & Localization</h4>
+            <p>
+              react-i18next với Tiếng Việt mặc định. formatCurrency đúng locale VND. Validation
+              messages toàn bộ bằng tiếng Việt.
+            </p>
+          </div>
+          <div class="hl-card">
+            <span class="hl-icon">📈</span>
+            <h4>Room Availability Engine</h4>
+            <p>
+              3 API slot: theo ngày, theo range, theo tháng (calendar). Kết hợp Schedule (weekly) +
+              BlockedSlot + Booking để tính trạng thái phòng chính xác.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">13 / 16</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+     SLIDE 16 — CLOSING
+════════════════════════════════════════════════ -->
+    <div class="slide s14">
+      <div class="s14-label">Kyanon Digital · K-Fresh Trainee · Final Project</div>
+      <div class="s14-title">Cảm ơn đã lắng nghe!</div>
+      <div class="s14-sub">Q &amp; A</div>
+      <div class="s14-stack">
+        <span class="s14-chip">Clean Architecture</span>
+        <span class="s14-chip">Feature-Sliced</span>
+        <span class="s14-chip">TypeScript Strict</span>
+        <span class="s14-chip">PostgreSQL + Redis</span>
+        <span class="s14-chip">PayOS QR Payment</span>
+        <span class="s14-chip">Docker Compose</span>
+        <span class="s14-chip">Audit Logging</span>
+        <span class="s14-chip">JWT Refresh Rotation</span>
+      </div>
+      <div class="slide-num" style="color: rgba(255, 255, 255, 0.3)">16 / 16</div>
+    </div>
+  </body>
+</html>

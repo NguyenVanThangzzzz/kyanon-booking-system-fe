@@ -1,0 +1,42 @@
+{
+  "app": {
+    "name": "Kyanon Booking System"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "rooms": "Rooms",
+    "bookings": "Bookings",
+    "logout": "Logout"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "view": "View",
+    "back": "Back",
+    "confirm": "Confirm"
+  },
+  "status": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "empty": "No data found",
+    "success": "Success"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "showing": "Showing {{from}}-{{to}} of {{total}} results"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalid_email": "Invalid email address",
+    "min_length": "Must be at least {{min}} characters",
+    "max_length": "Must be at most {{max}} characters",
+    "network": "Network error. Please try again.",
+    "server": "Server error. Please contact support."
+  }
+}
